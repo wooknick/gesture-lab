@@ -1,0 +1,34 @@
+html,
+body {
+  width: 100%;
+  height: 100vh;
+}
+
+body {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #3a3d45;
+  color: white;
+}
+
+video {
+  position: relative;
+  display: none;
+}
+
+canvas {
+  position: absolute;
+}
+canvas#drawing {
+  z-index: 10;
+}
+
+#overlay {
+  width: 100%;
+  height: 100%;
+  z-index: 8;
+  background-color: rgba(0, 0, 0, 0.9);
+}
+/*# sourceMappingURL=index.fc9f8515.css.map */
