@@ -8,3 +8,10 @@ body {
   overscroll-behavior: none;
   background-color: #3a3d45;
 }
+
+canvas#basketball {
+  position: fixed;
+  top: 0;
+  left: 0;
+  outline: none;
+}
