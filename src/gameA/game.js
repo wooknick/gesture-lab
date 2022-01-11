@@ -1,4 +1,4 @@
-import MagicHand from "./MagicHand";
+import MagicHand from "../MagicHand";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import CANNON from "cannon";
@@ -214,11 +214,11 @@ class Basketball {
 document.body.onload = () => {
   const magicHand = new MagicHand();
   magicHand.start();
-  // magicHand.debug();
+  magicHand.debug();
   magicHand.onGesture(handleGesture);
 
-  const bb = new Basketball();
-  bb.start();
+  // const bb = new Basketball();
+  // bb.start();
 
   let ready = false;
   function handleGesture({ left, right }) {

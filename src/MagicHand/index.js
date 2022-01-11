@@ -76,7 +76,7 @@ class MagicHand {
   debugResult(results) {
     this.ctx.save();
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.ctx.fillStyle = "#3a3d45";
+    this.ctx.fillStyle = "transparent";
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     // this.ctx.drawImage(
     //   results.image,
