@@ -20,6 +20,8 @@
     "@mediapipe/drawing_utils": "^0.3.1620248257",
     "@mediapipe/hands": "^0.4.1635986972",
     "cannon": "^0.6.2",
+    "matter-js": "^0.18.0",
+    "query-string": "^7.1.0",
     "three": "^0.136.0"
   }
 }

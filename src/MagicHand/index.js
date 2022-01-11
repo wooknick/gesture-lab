@@ -127,17 +127,21 @@ class MagicHand {
         const worldLandmark = multiHandWorldLandmarks[i];
         if (landmark) {
           this.handPose[hand] = this.findGesture({ landmark, worldLandmark });
+          this.handPosition[hand] = this.findPosition({ landmark });
         } else {
           this.handPose[hand] = "unknown";
+          this.handPosition[hand] = [];
         }
       }
     }
     // 보이지 않는 손 초기화
     if (!this.existHand.left) {
       this.handPose.left = "noexist";
+      this.handPosition.left = [];
     }
     if (!this.existHand.right) {
       this.handPose.right = "noexist";
+      this.handPosition.right = [];
     }
   }
 
@@ -181,12 +185,25 @@ class MagicHand {
     }
   }
 
+  findPosition({ landmark }) {
+    const ret = [];
+    [4, 8, 12, 16, 20].forEach((idx) => {
+      const p = {
+        x: landmark[idx].x,
+        y: landmark[idx].y,
+      };
+      ret.push(p);
+    });
+    return ret;
+  }
+
   onGesture(callback) {
     setInterval(callback.bind(this, this.handPose), 1000 / 24);
   }
 
   onPosition(callback) {
     setInterval(callback.bind(this, this.handPosition), 1000 / 24);
+    // setInterval(callback.bind(this, this.handPosition), 5000);
   }
 
   handleEventListener() {
