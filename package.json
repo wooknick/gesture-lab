@@ -4,7 +4,9 @@
   "description": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "yarn parcel src/index.html"
+    "dev": "yarn parcel src/index.html",
+    "build": "rm -rf dist/ && yarn parcel build src/index.html",
+    "deploy": "gh-pages -d dist/"
   },
   "author": "",
   "license": "ISC",
