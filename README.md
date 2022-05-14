@@ -1,5 +1,17 @@
-# Space Out
-멍때리기 좋은 기능들을 웹으로 구현해 봅니다.
+# Gesture Lab
 
-# Live Demos
-[marionette](https://playful-onepage.herokuapp.com/marionette/)
+It is a laboratory to increase the utilization of hand motion recognition.
+
+## Features
+
+- Single gesture recognition
+- Continuous motion recognition
+
+## Stack
+
+- [mediapipe](https://github.com/google/mediapipe)
+
+## Live Demos
+
+- [Gesture Lab](https://gesture-lab.netlify.app/)
+- [marionette](https://playful-onepage.herokuapp.com/marionette/)
