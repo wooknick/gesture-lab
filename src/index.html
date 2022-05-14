@@ -6,14 +6,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Magic Control</title>
     <link rel="stylesheet" href="style.scss" />
-    <link rel="stylesheet" href="https://unpkg.com/mvp.css" />
+    <!-- <link rel="stylesheet" href="https://unpkg.com/mvp.css" /> -->
   </head>
   <body>
-    <a href="./gameA/index.html">
-      <h1>A</h1>
-    </a>
-    <a href="./gameB/index.html">
-      <h1>B</h1>
-    </a>
+    <aside id="list"></aside>
+    <main>
+      <section id="canvas"></section>
+      <section id="label">
+        <div id="left-hand">
+          <span class="label">Left</span>
+          <span class="value"></span>
+        </div>
+        <div id="action-gesture">
+          <span class="label">Action Gesture</span>
+          <span class="value">-</span>
+        </div>
+        <div id="right-hand">
+          <span class="label">Right</span>
+          <span class="value"></span>
+        </div>
+      </section>
+    </main>
   </body>
+  <script src="./script.js" type="module"></script>
 </html>

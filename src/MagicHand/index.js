@@ -1,11 +1,17 @@
 import { Hands, HAND_CONNECTIONS } from "@mediapipe/hands";
 import { Camera } from "@mediapipe/camera_utils";
 import { drawConnectors, drawLandmarks } from "@mediapipe/drawing_utils";
-
+import {
+  isFist,
+  isRockNRoll,
+  isStand,
+  isStretchBack,
+  isVictory,
+} from "./gestureValidation";
 import "./style.scss";
 
 class MagicHand {
-  constructor() {
+  constructor(target) {
     // Elements
     this.videoElm = document.createElement("video");
     this.videoElm.id = "input";
@@ -13,6 +19,7 @@ class MagicHand {
     this.canvas = document.createElement("canvas");
     this.canvas.id = "debug";
     this.ctx = this.canvas.getContext("2d");
+    this.target = target;
     // LifeCycle
     this.isDebug = false;
     // Detection Data
@@ -32,6 +39,13 @@ class MagicHand {
       left: [],
       right: [],
     };
+    this.availableGesture = [
+      "stand",
+      "stretchBack",
+      "rockNRoll",
+      "victory",
+      "fist",
+    ];
   }
 
   start() {
@@ -44,7 +58,11 @@ class MagicHand {
 
   debug() {
     this.isDebug = true;
-    document.body.appendChild(this.canvas);
+    this.target.appendChild(this.canvas);
+  }
+
+  getAvailableGesture() {
+    return this.availableGesture;
   }
 
   initHands() {
@@ -67,8 +85,8 @@ class MagicHand {
       onFrame: async () => {
         await this.hands.send({ image: this.videoElm });
       },
-      width: 1280,
-      height: 720,
+      width: 1920,
+      height: 1080,
     });
     this.camera.start();
   }
@@ -86,12 +104,20 @@ class MagicHand {
     //   this.canvas.height
     // );
     if (results.multiHandLandmarks) {
-      for (const landmarks of results.multiHandLandmarks) {
-        drawConnectors(this.ctx, landmarks, HAND_CONNECTIONS, {
-          color: "#00FF00",
-          lineWidth: 5,
-        });
-        drawLandmarks(this.ctx, landmarks, { color: "#FF0000", lineWidth: 2 });
+      const { multiHandLandmarks } = results;
+      for (let i = 0; i < 2; i++) {
+        const landmark = multiHandLandmarks[i];
+        const hand = this.handIdx[i]; // left or right
+        if (hand) {
+          drawConnectors(this.ctx, landmark, HAND_CONNECTIONS, {
+            color: hand === "left" ? "#006E7F" : "#112B3C",
+            lineWidth: 5,
+          });
+          drawLandmarks(this.ctx, landmark, {
+            color: hand === "left" ? "#73777B" : "#205375",
+            lineWidth: 2,
+          });
+        }
       }
     }
     this.ctx.restore();
@@ -146,42 +172,18 @@ class MagicHand {
   }
 
   findGesture({ landmark, worldLandmark }) {
-    if (isStretchBack(worldLandmark)) {
+    if (isRockNRoll(landmark)) {
+      return "rockNRoll";
+    } else if (isVictory(landmark)) {
+      return "victory";
+    } else if (isFist(landmark)) {
+      return "fist";
+    } else if (isStretchBack(worldLandmark)) {
       return "stretchBack";
     } else if (isStand(landmark)) {
       return "stand";
     } else {
       return "unknown";
-    }
-
-    function isStand(landmark) {
-      // 평범하게 손을 들고 있는 상태 트리거
-      let ret = true;
-      if (
-        landmark[7].y < landmark[8].y ||
-        landmark[11].y < landmark[12].y ||
-        landmark[15].y < landmark[16].y ||
-        landmark[19].y < landmark[20].y
-      ) {
-        ret = false;
-      }
-      return ret;
-    }
-
-    function isStretchBack(landmark) {
-      // 농구공을 들듯 손을 당기는 제스쳐
-      let ret = false;
-      // console.log(
-      //   Math.floor(landmark[0].z * 10000) - Math.floor(landmark[9].z * 10000)
-      // );
-      if (
-        Math.floor(landmark[0].z * 10000) - Math.floor(landmark[9].z * 10000) <
-        -100
-      ) {
-        ret = true;
-      }
-
-      return ret;
     }
   }
 
@@ -211,9 +213,34 @@ class MagicHand {
   }
 
   resize() {
-    this.size = { width: window.innerWidth, height: window.innerHeight };
+    this.size = {
+      width: this.target.clientWidth,
+      height: this.target.clientHeight,
+    };
     this.canvas.width = this.size.width;
     this.canvas.height = this.size.height;
+  }
+
+  /**
+   * Utils
+   */
+  distance(a1, b1, c1, a2, b2, c2) {
+    var x_dist = a2 - a1;
+    var y_dist = b2 - b1;
+    var z_dist = c2 - c1;
+    return Math.sqrt(
+      Math.pow(Math.abs(x_dist), 2) +
+        Math.pow(Math.abs(y_dist), 2) +
+        Math.pow(Math.abs(z_dist), 2)
+    );
+  }
+
+  distance2(from, to) {
+    return Math.sqrt(
+      Math.pow(Math.abs(from.x - to.x), 2) +
+        Math.pow(Math.abs(from.y - to.y), 2) +
+        Math.pow(Math.abs(from.z - to.z), 2)
+    );
   }
 }
 
