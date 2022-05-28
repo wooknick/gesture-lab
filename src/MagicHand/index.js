@@ -220,28 +220,6 @@ class MagicHand {
     this.canvas.width = this.size.width;
     this.canvas.height = this.size.height;
   }
-
-  /**
-   * Utils
-   */
-  distance(a1, b1, c1, a2, b2, c2) {
-    var x_dist = a2 - a1;
-    var y_dist = b2 - b1;
-    var z_dist = c2 - c1;
-    return Math.sqrt(
-      Math.pow(Math.abs(x_dist), 2) +
-        Math.pow(Math.abs(y_dist), 2) +
-        Math.pow(Math.abs(z_dist), 2)
-    );
-  }
-
-  distance2(from, to) {
-    return Math.sqrt(
-      Math.pow(Math.abs(from.x - to.x), 2) +
-        Math.pow(Math.abs(from.y - to.y), 2) +
-        Math.pow(Math.abs(from.z - to.z), 2)
-    );
-  }
 }
 
 export default MagicHand;
