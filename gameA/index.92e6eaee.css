@@ -1,0 +1,18 @@
+body {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overscroll-behavior: none;
+  background-color: #3a3d45;
+}
+
+canvas#basketball {
+  position: fixed;
+  top: 0;
+  left: 0;
+  outline: none;
+}
+/*# sourceMappingURL=index.92e6eaee.css.map */
