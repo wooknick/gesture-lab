@@ -43,6 +43,8 @@ export function isFist(landmark) {
     distance(landmark[0], landmark[20]) <= distance(landmark[0], landmark[17])
   ) {
     return true;
+  } else if (landmark[5].y <= landmark[8].y && landmark[8].y <= landmark[6].y) {
+    return true;
   } else {
     return false;
   }

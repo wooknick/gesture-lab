@@ -2,10 +2,15 @@
   "name": "magic-control",
   "version": "1.0.0",
   "description": "",
+  "source": [
+    "src/index.html",
+    "src/gameA/index.html",
+    "src/gameB/index.html"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "yarn parcel src/index.html",
-    "build": "rm -rf dist/ && yarn parcel build src/index.html",
+    "dev": "yarn parcel",
+    "build": "rm -rf dist/ && yarn parcel build",
     "deploy": "gh-pages -d dist/"
   },
   "author": "",

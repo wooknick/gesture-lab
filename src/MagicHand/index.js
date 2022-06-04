@@ -189,13 +189,7 @@ class MagicHand {
 
   findPosition({ landmark }) {
     const ret = [];
-    [4, 8, 12, 16, 20].forEach((idx) => {
-      const p = {
-        x: landmark[idx].x,
-        y: landmark[idx].y,
-      };
-      ret.push(p);
-    });
+    ret.push(landmark[5], landmark[8], landmark[17], landmark[20]);
     return ret;
   }
 

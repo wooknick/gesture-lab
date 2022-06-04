@@ -1,239 +1,277 @@
 import MagicHand from "../MagicHand";
-import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import CANNON from "cannon";
+import {
+  Engine,
+  Render,
+  Runner,
+  Bodies,
+  Body,
+  Composite,
+  World,
+  Composites,
+  Constraint,
+  Common,
+  Mouse,
+  MouseConstraint,
+} from "matter-js";
+import toxi from "toxiclibsjs";
 
-class Basketball {
-  constructor() {
-    this.canvas = document.createElement("canvas");
-    this.canvas.id = "basketball";
+class PunchGame {
+  constructor(debug) {
     this.sizes = {
       width: window.innerWidth,
       height: window.innerHeight,
     };
-    this.objectsToUpdate = [];
   }
 
   init() {
-    // Scene
-    this.scene = new THREE.Scene();
-
-    /**
-     * Physics
-     */
-    // World
-    this.world = new CANNON.World();
-    this.world.broadphase = new CANNON.SAPBroadphase(this.world);
-    this.world.allowSleep = true;
-    this.world.gravity.set(0, -9.82, 0);
-    // Materials
-    const defaultMaterial = new CANNON.Material("default");
-    const defaultContactMaterial = new CANNON.ContactMaterial(
-      defaultMaterial,
-      defaultMaterial,
-      {
-        friction: 0.1,
-        restitution: 0.9,
-      }
-    );
-    // world.addContactMaterial(defaultContactMaterial);
-    this.world.defaultContactMaterial = defaultContactMaterial;
-
-    // Floor
-    const floorShape = new CANNON.Plane();
-    const floorBody = new CANNON.Body();
-    floorBody.mass = 0;
-    floorBody.addShape(floorShape);
-    floorBody.quaternion.setFromAxisAngle(
-      new CANNON.Vec3(-1, 0, 0),
-      Math.PI * 0.5
-    );
-    this.world.addBody(floorBody);
-    /**
-     * Physics End
-     */
-
-    /**
-     * Floor
-     */
-    const floor = new THREE.Mesh(
-      new THREE.PlaneGeometry(100, 100),
-      new THREE.MeshStandardMaterial({
-        color: "#e3e3e3",
-        metalness: 0.3,
-        roughness: 0.4,
-        // envMap: environmentMapTexture,
-      })
-    );
-    floor.receiveShadow = true;
-    floor.rotation.x = -Math.PI * 0.5;
-    this.scene.add(floor);
-
-    /**
-     * Lights
-     */
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-    this.scene.add(ambientLight);
-
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.2);
-    directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.set(1024, 1024);
-    directionalLight.shadow.camera.far = 15;
-    directionalLight.shadow.camera.left = -7;
-    directionalLight.shadow.camera.top = 7;
-    directionalLight.shadow.camera.right = 7;
-    directionalLight.shadow.camera.bottom = -7;
-    directionalLight.position.set(5, 5, 5);
-    this.scene.add(directionalLight);
-
-    /**
-     * Camera
-     */
-    // Base camera
-    this.camera = new THREE.PerspectiveCamera(
-      75,
-      this.sizes.width / this.sizes.height,
-      0.1,
-      100
-    );
-    this.camera.position.set(0, 3, 4);
-    this.scene.add(this.camera);
-
-    // Controls
-    this.controls = new OrbitControls(this.camera, this.canvas);
-    this.controls.enableDamping = true;
-    this.controls.target = new THREE.Vector3(0, 3, 0);
-
-    /**
-     * Renderer
-     */
-    this.renderer = new THREE.WebGLRenderer({
-      canvas: this.canvas,
+    this.engine = Engine.create();
+    this.world = this.engine.world;
+    this.render = Render.create({
+      element: document.body,
+      engine: this.engine,
+      options: {
+        width: this.sizes.width,
+        height: this.sizes.height,
+        // showAngleIndicator: true,
+        // showCollisions: true,
+        // showVelocity: true,
+        wireframes: false,
+      },
     });
-    this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    this.renderer.setSize(this.sizes.width, this.sizes.height);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-    /**
-     * Animate
-     */
-    this.clock = new THREE.Clock();
-    this.oldElapsedTime = 0;
-  }
-
-  animate() {
-    const elapsedTime = this.clock.getElapsedTime();
-    const deltaTime = elapsedTime - this.oldElapsedTime;
-    this.oldElapsedTime = elapsedTime;
-    //   console.log(deltaTime);
-
-    // Update physics world
-    this.world.step(1 / 60, deltaTime, 3);
-
-    for (const object of this.objectsToUpdate) {
-      object.mesh.position.copy(object.body.position);
-      object.mesh.quaternion.copy(object.body.quaternion);
-    }
-
-    // Update controls
-    this.controls.update();
-
-    // Render
-    this.renderer.render(this.scene, this.camera);
-
-    // Call tick again on the next frame
-    window.requestAnimationFrame(this.animate.bind(this));
+    this.canvas = this.render.canvas;
+    this.runner = Runner.create();
   }
 
   start() {
-    document.body.appendChild(this.canvas);
     this.init();
+    Render.run(this.render);
+    Runner.run(this.runner, this.engine);
+    this.drawWorld();
+    this.addMouse();
     this.handleEventListener();
-    this.animate();
   }
 
-  shoot() {
-    console.log("shoot!");
-    this.createSphere(0.5, { x: 0, y: 3, z: 0 });
+  drawWorld() {
+    // 바닥
+    const ground = Bodies.rectangle(
+      this.sizes.width / 2,
+      this.sizes.height,
+      this.sizes.width,
+      100,
+      { isStatic: true }
+    );
+    const wall = [
+      Bodies.rectangle(0, this.sizes.height / 2, 100, this.sizes.height, {
+        isStatic: true,
+      }),
+      Bodies.rectangle(
+        this.sizes.width,
+        this.sizes.height / 2,
+        100,
+        this.sizes.height,
+        {
+          isStatic: true,
+        }
+      ),
+    ];
+
+    this.balls = Composites.stack(
+      this.sizes.width / 3,
+      -3000,
+      12,
+      40,
+      10,
+      10,
+      function (x, y) {
+        return Bodies.circle(x, y, Common.random(15, 60), {
+          restitution: 0.6,
+          friction: 0.1,
+        });
+      }
+    );
+
+    Composite.add(this.world, [ground, ...wall, this.balls]);
   }
 
-  createSphere(radius, position) {
-    const sphereGeometry = new THREE.SphereBufferGeometry(1, 20, 20);
-    const sphereMaterial = new THREE.MeshStandardMaterial({
-      metalness: 0.3,
-      roughness: 0.4,
-      // envMap: environmentMapTexture,
-    });
-    // Three.js mesh
-    const mesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
-    mesh.scale.set(radius, radius, radius);
-    mesh.castShadow = true;
-    mesh.position.copy(position);
-    this.scene.add(mesh);
+  cleanWorld() {
+    World.clear(this.world, false);
+  }
 
-    // Cannon.js body
-    const defaultMaterial = new CANNON.Material("default");
-    const shape = new CANNON.Sphere(radius);
-    const body = new CANNON.Body({
-      mass: 1,
-      position: new CANNON.Vec3(0, 3, 0),
-      shape,
-      material: defaultMaterial,
+  addMouse() {
+    this.mouse = Mouse.create(this.render.canvas);
+    this.mouseConstraint = MouseConstraint.create(this.engine, {
+      mouse: this.mouse,
+      constraint: {
+        stiffness: 0.2,
+        render: {
+          visible: false,
+        },
+      },
     });
-    body.applyForce(new CANNON.Vec3(0, 700, -400), body.position);
-    body.position.copy(position);
-    this.world.addBody(body);
 
-    // Save in objects to update
-    this.objectsToUpdate.push({
-      mesh,
-      body,
+    Composite.add(this.world, this.mouseConstraint);
+
+    // keep the mouse in sync with rendering
+    this.render.mouse = this.mouse;
+  }
+
+  impact(point) {
+    console.log(point);
+    const ballsInArea = this.balls.bodies.filter((ball) => {
+      if (this.distance(point, ball.position) < 300) {
+        return true;
+      } else {
+        return false;
+      }
     });
+    ballsInArea.forEach((ball) => {
+      Body.applyForce(ball, point, this.calculateForce(ball.position, point));
+    });
+  }
+
+  calculateForce(from, to, factor = 0.01) {
+    const force = {
+      x: (from.x - to.x) * factor,
+      y: (from.y - to.y) * factor,
+    };
+
+    return force;
+  }
+
+  distance(from, to) {
+    return Math.sqrt(Math.pow(from.x - to.x, 2) + Math.pow(from.y - to.y, 2));
   }
 
   handleEventListener() {
-    window.addEventListener("resize", this.resize.bind(this));
+    window.addEventListener("resize", () => {
+      if (this.resizeT) {
+        clearTimeout(this.resizeT);
+      }
+      this.resizeT = setTimeout(this.resize.bind(this), 300);
+    });
+    window.addEventListener("click", (e) => {
+      const { clientX, clientY } = e;
+      this.impact({ x: clientX, y: clientY });
+    });
   }
 
   resize() {
     // Update sizes
-    this.sizes.width = window.innerWidth;
-    this.sizes.height = window.innerHeight;
-
-    // Update camera
-    this.camera.aspect = this.sizes.width / this.sizes.height;
-    this.camera.updateProjectionMatrix();
-
-    // Update renderer
-    this.renderer.setSize(this.sizes.width, this.sizes.height);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.sizes = {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    };
+    this.canvas.width = this.sizes.width;
+    this.canvas.height = this.sizes.height;
+    this.cleanWorld();
+    this.drawWorld();
   }
 }
 
 document.body.onload = () => {
-  const magicHand = new MagicHand();
+  const punch = new PunchGame();
+  punch.start();
+  const magicHand = new MagicHand(document.body);
   magicHand.start();
   magicHand.debug();
   magicHand.onGesture(handleGesture);
+  magicHand.onPosition(handlePosition);
 
-  // const bb = new Basketball();
-  // bb.start();
+  const state = {
+    left: {
+      gesture: "",
+      ready: false,
+    },
+    right: {
+      gesture: "",
+      ready: false,
+    },
+  };
 
-  let ready = false;
   function handleGesture({ left, right }) {
-    console.log(`Left is ${left}`);
-    console.log(`Right is ${right}`);
-    if (left !== "stand") {
-      ready = false;
-    } else {
-      if (!ready && right === "stretchBack") {
-        ready = true;
+    state.left.gesture = left;
+    state.right.gesture = right;
+    // console.log(`Left is ${gesture.left}`);
+    // console.log(`Right is ${gesture.right}`);
+  }
+
+  function handlePosition({ left, right }) {
+    // console.log(left[0], right[0]);
+    // console.log(left, right);
+
+    const PUNCH_FIST_SIZE = 17;
+
+    if (state.right.gesture === "") {
+      if (state.right.ready) {
+        state.right.ready = false;
       }
-      if (ready && right === "unknown") {
-        bb.shoot();
-        ready = false;
+    } else if (right.length > 0) {
+      if (getFistSize(...right) < PUNCH_FIST_SIZE) {
+        state.right.ready = true;
+      } else {
+        if (state.right.ready) {
+          punch.impact(getFistCenter(...right));
+          state.right.ready = false;
+        }
       }
     }
+    if (state.left.gesture === "") {
+      if (state.left.ready) {
+        state.left.ready = false;
+      }
+    } else if (left.length > 0) {
+      if (getFistSize(...left) < PUNCH_FIST_SIZE) {
+        state.left.ready = true;
+      } else {
+        if (state.left.ready) {
+          punch.impact(getFistCenter(...left));
+          state.left.ready = false;
+        }
+      }
+    }
+    // console.log(state.left, state.right);
+  }
+
+  function getFistSize(A, B, C, D) {
+    const size = distance2d(A, C) * distance2d(B, D);
+    return Math.floor(size * 1000);
+  }
+
+  function getFistCenter(A, B, C, D) {
+    const xs = [A.x, B.x, C.x, D.x].sort();
+    const ys = [A.y, B.y, C.y, D.y].sort();
+
+    return {
+      x: window.innerWidth * ((xs[3] + xs[0]) / 2),
+      y: window.innerHeight * ((ys[3] + ys[0]) / 2),
+    };
+  }
+
+  function getRadius(A, B, C) {
+    const yDelta_a = B.y - A.y;
+    const xDelta_a = B.x - A.x;
+    const yDelta_b = C.y - B.y;
+    const xDelta_b = C.x - B.x;
+
+    const center = {};
+
+    const aSlope = yDelta_a / xDelta_a;
+    const bSlope = yDelta_b / xDelta_b;
+
+    center.x =
+      (aSlope * bSlope * (A.y - C.y) +
+        bSlope * (A.x + B.x) -
+        aSlope * (B.x + C.x)) /
+      (2 * (bSlope - aSlope));
+    center.y = (-1 * (center.x - (A.x + B.x) / 2)) / aSlope + (A.y + B.y) / 2;
+
+    const radius = Math.sqrt(
+      Math.pow(A.x - center.x, 2) + Math.pow(A.y - center.y, 2)
+    );
+    return Math.floor(radius * 100);
+  }
+
+  function distance2d(from, to) {
+    return Math.sqrt(Math.pow(from.x - to.x, 2) + Math.pow(from.y - to.y, 2));
   }
 };
