@@ -8,12 +8,10 @@ import {
   Composite,
   World,
   Composites,
-  Constraint,
   Common,
   Mouse,
   MouseConstraint,
 } from "matter-js";
-import toxi from "toxiclibsjs";
 
 class PunchGame {
   constructor(debug) {
